@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: springinitializr-mcp
+  ai:
+    mcp:
+      server:
+        name: springinitializr
+        version: 1.0.0
+        capabilities:
+          tool: true
+          resource: true
+          prompt: false
+          completion: false
