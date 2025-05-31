@@ -22,9 +22,6 @@ class InitializationIntegrationTest {
     private static final String INITIALIZE_REQUEST = """
             {"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"claude-ai","version":"0.1.0"}},"jsonrpc":"2.0","id":0}""";
 
-    private static final String TOOLS_LIST_REQUEST = """
-            {"method":"tools/list","params":{},"jsonrpc":"2.0","id":1}""";
-
     @Test
     @Timeout(value = 60, unit = TimeUnit.SECONDS)
     void testNativeExecutableMcpProtocol() throws Exception {
@@ -78,8 +75,7 @@ class InitializationIntegrationTest {
 
     private void testMcpProtocolWithProcess(Process serverProcess) throws IOException, InterruptedException {
         try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(serverProcess.getOutputStream()));
-             BufferedReader reader = new BufferedReader(new InputStreamReader(serverProcess.getInputStream()));
-             BufferedReader errorReader = new BufferedReader(new InputStreamReader(serverProcess.getErrorStream()))) {
+             BufferedReader reader = new BufferedReader(new InputStreamReader(serverProcess.getInputStream()))) {
 
             // Wait a bit for startup
             Thread.sleep(1000);
@@ -113,63 +109,6 @@ class InitializationIntegrationTest {
             assertEquals("springinitializr", serverInfo.get("name").asText());
         } else if (responseJson.has("error")) {
             fail("Initialize failed with error: " + responseJson.get("error"));
-        }
-    }
-
-    private void validateToolsListResponse(String response) throws IOException {
-        assertNotNull(response, "Tools list response should not be null");
-
-        JsonNode responseJson = objectMapper.readTree(response);
-        assertEquals("2.0", responseJson.get("jsonrpc").asText());
-        assertEquals(1, responseJson.get("id").asInt());
-
-        if (responseJson.has("result")) {
-            JsonNode result = responseJson.get("result");
-            assertTrue(result.has("tools"));
-
-            JsonNode tools = result.get("tools");
-            assertTrue(tools.isArray());
-            assertTrue(tools.size() > 0, "Should have at least one tool");
-
-            // Check for getName tool
-            boolean hasGetNameTool = false;
-            for (JsonNode tool : tools) {
-                if ("getName".equals(tool.get("name").asText())) {
-                    hasGetNameTool = true;
-                    assertEquals("Get my name", tool.get("description").asText());
-                    break;
-                }
-            }
-            assertTrue(hasGetNameTool, "Should have getName tool");
-
-            System.out.println("✅ Tools list response valid: " + response);
-        } else if (responseJson.has("error")) {
-            fail("Tools list failed with error: " + responseJson.get("error"));
-        }
-    }
-
-    private void validateToolCallResponse(String response) throws IOException {
-        assertNotNull(response, "Tool call response should not be null");
-
-        JsonNode responseJson = objectMapper.readTree(response);
-        assertEquals("2.0", responseJson.get("jsonrpc").asText());
-        assertEquals(2, responseJson.get("id").asInt());
-
-        if (responseJson.has("result")) {
-            JsonNode result = responseJson.get("result");
-            assertTrue(result.has("content"));
-
-            JsonNode content = result.get("content");
-            assertTrue(content.isArray());
-            assertTrue(content.size() > 0);
-
-            JsonNode firstContent = content.get(0);
-            assertEquals("text", firstContent.get("type").asText());
-            assertTrue(firstContent.get("text").asText().contains("Hugo Palma"));
-
-            System.out.println("✅ Tool call response valid: " + response);
-        } else if (responseJson.has("error")) {
-            fail("Tool call failed with error: " + responseJson.get("error"));
         }
     }
 
