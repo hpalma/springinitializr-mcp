@@ -28,12 +28,20 @@ class SpringInitialzrTools {
 
             @ToolParam(description = PROJECT_NAME_DESCRIPTION, required = false)
             String name,
+
+            @ToolParam(description = PROJECT_DESCRIPTION_DESCRIPTION, required = false)
             String description,
+
+            @ToolParam(description = PACKAGE_NAME_DESCRIPTION, required = false)
             String packageName,
+
+            @ToolParam(description = PACKAGING_DESCRIPTION, required = false)
             String packaging,
 
             @ToolParam(description = JAVA_VERSION_DESCRIPTION, required = false)
             String javaVersion,
+
+            @ToolParam(description = DEPENDENCIES_DESCRIPTION, required = false)
             String dependencies) {
         return "/Users/hugo.palma/Desktop/demo.zip";
     }

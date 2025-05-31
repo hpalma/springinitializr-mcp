@@ -1,5 +1,3 @@
-import groovy.json.JsonSlurper
-
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.0'
@@ -55,31 +53,4 @@ tasks.register('nativeIntegrationTest', Test) {
 }
 nativeIntegrationTest.dependsOn nativeCompile
 
-// Generate tool descriptions
-tasks.register('generateToolDescriptions') {
-    doLast {
-        def metadata = fetchSpringInitializrMetadata()
-
-        def templateFile = file('src/templates/SpringInitialzrConstants.java')
-        def outputFile = file('src/generated/java/com/hugopalma/springinitializrmcp/SpringInitialzrConstants.java')
-
-        outputFile.parentFile.mkdirs()
-        outputFile.text = templateFile.text.replace('${JAVA_VERSION_DEFAULT_AND_SUPPORTED}', 'Defaults to \'' + metadata.javaVersion?.default + '\'. Supported values: \'' + metadata.javaVersion?.values?.collect { it.id }.join('\', \'') + '\'.')
-    }
-}
-compileJava.dependsOn generateToolDescriptions
-
-static def fetchSpringInitializrMetadata() {
-    def url = new URI("https://start.spring.io/metadata/client").toURL()
-    def connection = url.openConnection()
-    connection.setConnectTimeout(5000)
-    connection.setReadTimeout(10000)
-
-    if (connection.responseCode == 200) {
-        def jsonText = connection.inputStream.text
-        def jsonSlurper = new JsonSlurper()
-        return jsonSlurper.parseText(jsonText)
-    } else {
-        throw new RuntimeException("Failed to fetch metadata: HTTP ${connection.responseCode}")
-    }
-}
+apply from: 'code-generation.gradle'

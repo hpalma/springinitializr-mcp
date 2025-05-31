@@ -1,0 +1,51 @@
+import groovy.json.JsonSlurper
+
+tasks.register('generateToolDescriptions') {
+    doLast {
+        def metadata = fetchSpringInitializrMetadata()
+
+        def templateFile = file('src/templates/SpringInitialzrConstants.java')
+        def outputFile = file('src/generated/java/com/hugopalma/springinitializrmcp/SpringInitialzrConstants.java')
+
+        outputFile.parentFile.mkdirs()
+
+        setJavaVersion(outputFile, templateFile, metadata)
+        setDependencies(outputFile, metadata)
+    }
+}
+compileJava.dependsOn generateToolDescriptions
+
+static private def setJavaVersion(outputfile, templateFile, metadata) {
+    def javaVersion = metadata.javaVersion?.default
+    def allowedValues = metadata.javaVersion?.values?.collect { it.id }
+
+    outputfile.text = templateFile.text.replace '${JAVA_VERSION_DEFAULT_AND_SUPPORTED}', 'Defaults to \'' + javaVersion + '\'. Supported values: \'' + allowedValues.join('\', \'') + '\'.'
+}
+
+static private def setDependencies(outputfile, metadata) {
+    def allIds = []
+    metadata.dependencies?.values?.each { category ->
+        category.values.each { item ->
+            if (item.id) {
+                allIds << item.id
+            }
+        }
+    }
+
+    outputfile.text = outputfile.text.replace '${DEPENDENCIES_SUPPORTED}', 'Supported values: \'' + allIds.join('\',\'') + '\'.'
+}
+
+static private def fetchSpringInitializrMetadata() {
+    def url = new URI("https://start.spring.io/metadata/client").toURL()
+    def connection = url.openConnection()
+    connection.setConnectTimeout(5000)
+    connection.setReadTimeout(10000)
+
+    if (connection.responseCode == 200) {
+        def jsonText = connection.inputStream.text
+        def jsonSlurper = new JsonSlurper()
+        return jsonSlurper.parseText(jsonText)
+    } else {
+        throw new RuntimeException("Failed to fetch metadata: HTTP ${connection.responseCode}")
+    }
+}
