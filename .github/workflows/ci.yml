@@ -36,9 +36,6 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew build -x test
 
-    - name: Run Java Tests
-      run: ./gradlew test
-
     - name: Run Native Tests
       run: ./gradlew nativeTest
 
@@ -50,7 +47,7 @@ jobs:
       if: always()
       with:
         name: test-results
-        path: build/reports/tests/test/
+        path: build/reports/tests/
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
