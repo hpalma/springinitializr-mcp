@@ -67,6 +67,7 @@ tasks.register('generateToolDescriptions') {
         outputFile.text = templateFile.text.replace('${JAVA_VERSION_DEFAULT_AND_SUPPORTED}', 'Defaults to \'' + metadata.javaVersion?.default + '\'. Supported values: \'' + metadata.javaVersion?.values?.collect { it.id }.join('\', \'') + '\'.')
     }
 }
+compileJava.dependsOn generateToolDescriptions
 
 static def fetchSpringInitializrMetadata() {
     def url = new URI("https://start.spring.io/metadata/client").toURL()
