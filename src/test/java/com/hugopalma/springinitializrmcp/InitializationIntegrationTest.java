@@ -95,7 +95,7 @@ class InitializationIntegrationTest {
                 System.out.println("Native executable startup time: " + startupTime + "ms");
 
                 // Native images should start very quickly
-                assertTrue(startupTime < 1000, "Native startup should be under 5 seconds");
+                assertTrue(startupTime < 1000, "Native startup should be under 1 second");
             }
         } finally {
             if (serverProcess.isAlive()) {
@@ -134,7 +134,7 @@ class InitializationIntegrationTest {
 
         if (responseJson.has("result")) {
             ArrayNode tools = (ArrayNode) responseJson.get("result").get("tools");
-            assertEquals("generateAndDownload", tools.get(0).get("name").asText());
+            assertEquals("generateSpringBootProject", tools.get(0).get("name").asText());
         } else if (responseJson.has("error")) {
             fail("Initialize failed with error: " + responseJson.get("error"));
         }
