@@ -1,13 +1,14 @@
 spring:
   application:
     name: springinitializr-mcp
+  main:
+    banner-mode: "off"
   ai:
     mcp:
       server:
         name: springinitializr
         version: 1.0.0
-        capabilities:
-          tool: true
-          resource: true
-          prompt: false
-          completion: false
+
+logging:
+  level:
+    root: off
