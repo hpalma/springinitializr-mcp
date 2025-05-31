@@ -1,3 +1,5 @@
+import groovy.json.JsonSlurper
+
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.0'
@@ -11,6 +13,14 @@ version = '0.0.1-SNAPSHOT'
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(24)
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += 'src/generated/java'
+        }
     }
 }
 
@@ -44,3 +54,36 @@ tasks.register('nativeIntegrationTest', Test) {
     systemProperty 'test.native.integration', 'true'
 }
 nativeIntegrationTest.dependsOn nativeCompile
+
+// Generate tool descriptions
+tasks.register('generateToolDescriptions') {
+    doLast {
+        def metadata = fetchSpringInitializrMetadata()
+
+        def javaVersions = metadata.javaVersion?.values?.collect { it.id }
+        def defaultJava = metadata.javaVersion?.default
+
+        println javaVersions
+
+        def templateFile = file('src/templates/SpringInitialzrConstants.java')
+        def outputFile = file('src/generated/java/com/hugopalma/springinitializrmcp/SpringInitialzrConstants.java')
+
+        outputFile.parentFile.mkdirs()
+        outputFile.text = templateFile.text.replace('${JAVA_VERSION_DEFAULT_AND_SUPPORTED}', 'Defaults to \'' + defaultJava + '\'. Supported values: \'' + javaVersions.join('\', \'') + '\'.')
+    }
+}
+
+static def fetchSpringInitializrMetadata() {
+    def url = new URI("https://start.spring.io/metadata/client").toURL()
+    def connection = url.openConnection()
+    connection.setConnectTimeout(5000)
+    connection.setReadTimeout(10000)
+
+    if (connection.responseCode == 200) {
+        def jsonText = connection.inputStream.text
+        def jsonSlurper = new JsonSlurper()
+        return jsonSlurper.parseText(jsonText)
+    } else {
+        throw new RuntimeException("Failed to fetch metadata: HTTP ${connection.responseCode}")
+    }
+}

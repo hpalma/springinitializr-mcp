@@ -4,6 +4,8 @@ import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
 
+import static com.hugopalma.springinitializrmcp.SpringInitialzrConstants.*;
+
 @Service
 class SpringInitialzrTools {
 
@@ -35,12 +37,4 @@ class SpringInitialzrTools {
             String dependencies) {
         return "/Users/hugo.palma/Desktop/demo.zip";
     }
-
-    private static final String PROJECT_TYPE_DESCRIPTION = "The project type. Defaults to 'gradle-project'. Supported values: 'maven-project', 'gradle-project', 'gradle-project-kotlin'.";
-    private static final String LANGUAGE_DESCRIPTION = "The language. Defaults to 'java'. Supported values: 'java', 'kotlin', 'groovy'.";
-    private static final String GROUP_ID_DESCRIPTION = "The group id of the generated project.";
-    private static final String ARTIFACT_ID_DESCRIPTION = "The artifact id of the generated project.";
-    private static final String SPRING_BOOT_VERSION_DESCRIPTION = "The Spring Boot version.";
-    private static final String PROJECT_NAME_DESCRIPTION = "The project name.";
-    private static final String JAVA_VERSION_DESCRIPTION = "The java version to use. Defaults to '17'. Supported values: '17', '21', '24'.";
 }
