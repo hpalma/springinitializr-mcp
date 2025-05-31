@@ -60,16 +60,11 @@ tasks.register('generateToolDescriptions') {
     doLast {
         def metadata = fetchSpringInitializrMetadata()
 
-        def javaVersions = metadata.javaVersion?.values?.collect { it.id }
-        def defaultJava = metadata.javaVersion?.default
-
-        println javaVersions
-
         def templateFile = file('src/templates/SpringInitialzrConstants.java')
         def outputFile = file('src/generated/java/com/hugopalma/springinitializrmcp/SpringInitialzrConstants.java')
 
         outputFile.parentFile.mkdirs()
-        outputFile.text = templateFile.text.replace('${JAVA_VERSION_DEFAULT_AND_SUPPORTED}', 'Defaults to \'' + defaultJava + '\'. Supported values: \'' + javaVersions.join('\', \'') + '\'.')
+        outputFile.text = templateFile.text.replace('${JAVA_VERSION_DEFAULT_AND_SUPPORTED}', 'Defaults to \'' + metadata.javaVersion?.default + '\'. Supported values: \'' + metadata.javaVersion?.values?.collect { it.id }.join('\', \'') + '\'.')
     }
 }
 
