@@ -2,6 +2,7 @@ package com.hugopalma.springinitializrmcp;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
@@ -22,6 +23,12 @@ class InitializationIntegrationTest {
     private static final String INITIALIZE_REQUEST = """
             {"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"claude-ai","version":"0.1.0"}},"jsonrpc":"2.0","id":0}""";
 
+    private static final String NOTIFICATION_REQUEST = """
+            {"method":"notifications/initialized","jsonrpc":"2.0"}""";
+
+    private static final String TOOLS_REQUEST = """
+            {"method":"tools/list","params":{},"jsonrpc":"2.0","id":1}""";
+
     @Test
     @Timeout(value = 60, unit = TimeUnit.SECONDS)
     void testNativeExecutableMcpProtocol() throws Exception {
@@ -31,7 +38,32 @@ class InitializationIntegrationTest {
         Process serverProcess = startNativeExecutable(nativeExecutable);
 
         try {
-            testMcpProtocolWithProcess(serverProcess);
+            try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(serverProcess.getOutputStream()));
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(serverProcess.getInputStream()))) {
+
+                // Wait a bit for startup
+                Thread.sleep(1000);
+
+                assertTrue(serverProcess.isAlive(), "Native executable should be running");
+
+                // Test 1: Initialize request
+                writer.println(INITIALIZE_REQUEST);
+                writer.flush();
+
+                String initResponse = readResponseWithTimeout(reader, Duration.ofSeconds(10));
+                validateInitializeResponse(initResponse);
+
+                // Notifications initialization request
+                writer.println(NOTIFICATION_REQUEST);
+                writer.flush();
+
+                // Test 1: Tools request
+                writer.println(TOOLS_REQUEST);
+                writer.flush();
+
+                String toolsResponse = readResponseWithTimeout(reader, Duration.ofSeconds(10));
+                validateToolsResponse(toolsResponse);
+            }
         } finally {
             if (serverProcess.isAlive()) {
                 serverProcess.destroyForcibly();
@@ -63,32 +95,13 @@ class InitializationIntegrationTest {
                 System.out.println("Native executable startup time: " + startupTime + "ms");
 
                 // Native images should start very quickly
-                assertTrue(startupTime < 5000, "Native startup should be under 5 seconds");
+                assertTrue(startupTime < 1000, "Native startup should be under 5 seconds");
             }
         } finally {
             if (serverProcess.isAlive()) {
                 serverProcess.destroyForcibly();
                 serverProcess.waitFor(5, TimeUnit.SECONDS);
             }
-        }
-    }
-
-    private void testMcpProtocolWithProcess(Process serverProcess) throws IOException, InterruptedException {
-        try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(serverProcess.getOutputStream()));
-             BufferedReader reader = new BufferedReader(new InputStreamReader(serverProcess.getInputStream()))) {
-
-            // Wait a bit for startup
-            Thread.sleep(1000);
-
-            assertTrue(serverProcess.isAlive(), "Native executable should be running");
-
-            // Test 1: Initialize request
-            System.out.println("Sending initialize request...");
-            writer.println(INITIALIZE_REQUEST);
-            writer.flush();
-
-            String initResponse = readResponseWithTimeout(reader, Duration.ofSeconds(10));
-            validateInitializeResponse(initResponse);
         }
     }
 
@@ -107,6 +120,21 @@ class InitializationIntegrationTest {
 
             JsonNode serverInfo = result.get("serverInfo");
             assertEquals("springinitializr", serverInfo.get("name").asText());
+        } else if (responseJson.has("error")) {
+            fail("Initialize failed with error: " + responseJson.get("error"));
+        }
+    }
+
+    private void validateToolsResponse(String response) throws IOException {
+        assertNotNull(response, "Tools response should not be null");
+
+        JsonNode responseJson = objectMapper.readTree(response);
+        assertEquals("2.0", responseJson.get("jsonrpc").asText());
+        assertEquals(1, responseJson.get("id").asInt());
+
+        if (responseJson.has("result")) {
+            ArrayNode tools = (ArrayNode) responseJson.get("result").get("tools");
+            assertEquals("generateAndDownload", tools.get(0).get("name").asText());
         } else if (responseJson.has("error")) {
             fail("Initialize failed with error: " + responseJson.get("error"));
         }
