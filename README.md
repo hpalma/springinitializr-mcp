@@ -13,6 +13,8 @@ This project implements an MCP server that wraps the Spring Initializr API, enab
 - **Dependency Management**: Add popular Spring Boot dependencies automatically
 - **Native Compilation**: Fast startup times with GraalVM native compilation
 - **Cross-Platform**: Native binaries available for Linux, Windows, and macOS (x64 and ARM64)
+- **Automatic Extraction**: Optional extraction of downloaded ZIP files
+- **Dynamic Metadata**: Automatically fetches latest Spring Boot versions and dependencies
 
 ## Supported Parameters
 
@@ -24,6 +26,7 @@ When generating a project, you can specify:
 - **Packaging**: `jar`, `war` (defaults to `jar`)
 - **Dependencies**: Hundreds of Spring Boot starters and dependencies
 - **Project Metadata**: Group ID, Artifact ID, name, description, package name
+- **Download Options**: Custom download location and automatic ZIP extraction
 
 ## Installation
 
@@ -89,7 +92,7 @@ Once configured, you can ask Claude to generate Spring Boot projects:
 
 > "Create a Maven-based Spring Boot project with Thymeleaf, Validation, and Actuator"
 
-The tool will generate and download the project as a ZIP file to your specified location.
+The tool will generate and download the project as a ZIP file to your specified location, with optional automatic extraction.
 
 ## Available Dependencies
 
@@ -104,7 +107,7 @@ The server supports all Spring Initializr dependencies, including:
 - **AI**: Spring AI with various model providers
 - **Testing**: TestContainers, Contract testing
 
-For a complete list, see the generated constants or check [Spring Initializr](https://start.spring.io).
+The dependency list is automatically updated by fetching the latest metadata from Spring Initializr.
 
 ## Development
 
@@ -132,7 +135,10 @@ The project uses a Gradle task to fetch the latest Spring Initializr metadata an
 ./gradlew generateToolDescriptions
 ```
 
-This ensures the tool always supports the latest Spring Boot versions and dependencies.
+This ensures the tool always supports the latest Spring Boot versions and dependencies by:
+- Fetching metadata from `https://start.spring.io/metadata/client`
+- Generating `SpringInitializrConstants.java` with current dependencies
+- Updating supported Java versions and default values
 
 ## Testing
 
@@ -141,11 +147,26 @@ The project includes comprehensive tests:
 - **Unit Tests**: Standard JUnit tests for core functionality
 - **Integration Tests**: Tests for the MCP protocol implementation
 - **Native Tests**: Validation that native compilation works correctly
+- **URL Builder Tests**: Validation of Spring Initializr URL construction
 
 ```bash
 # Run all tests
 ./gradlew test nativeTest nativeIntegrationTest
+
+# Run only unit tests
+./gradlew test
+
+# Run only native integration tests
+./gradlew nativeIntegrationTest
 ```
+
+### Native Performance Testing
+
+The integration tests include startup time validation to ensure native compilation provides expected performance benefits:
+
+- Native executable startup under 1 second
+- Full MCP protocol handshake validation
+- Tool discovery and invocation testing
 
 ## CI/CD
 
@@ -154,6 +175,58 @@ The project uses GitHub Actions for:
 - **Continuous Integration**: Build and test on every push/PR
 - **Release Automation**: Create native binaries for all platforms
 - **Multi-platform Support**: Linux, Windows, macOS (x64 and ARM64)
+- **Automated Testing**: Unit, integration, and native tests
+
+### Release Process
+
+1. Create a new release on GitHub or trigger workflow manually
+2. Native binaries are automatically built for all platforms
+3. Binaries are attached to the release for download
+
+## Configuration
+
+### Application Configuration
+
+The server uses Spring Boot configuration with the following key properties:
+
+```yaml
+spring:
+  application:
+    name: springinitializr-mcp
+  ai:
+    mcp:
+      server:
+        name: springinitializr
+        version: 1.0.0
+```
+
+### Environment Profiles
+
+- **Default**: Minimal logging for production use
+- **Dev**: Enhanced logging for development and debugging
+
+## API Reference
+
+### Tool: generate-spring-boot-project
+
+Generates and downloads a Spring Boot project with the specified configuration.
+
+**Parameters:**
+- `downloadFolderPath` (optional): Target download directory
+- `shouldExtract` (optional): Whether to extract the ZIP file
+- `projectType` (optional): Project build system type
+- `language` (optional): Programming language
+- `groupId` (optional): Maven/Gradle group identifier
+- `artifactId` (optional): Project artifact identifier
+- `springBootVersion` (optional): Spring Boot version to use
+- `name` (optional): Project display name
+- `description` (optional): Project description
+- `packageName` (optional): Base Java package name
+- `packaging` (optional): Packaging type (JAR/WAR)
+- `javaVersion` (optional): Target Java version
+- `dependencies` (optional): Comma-separated dependency list
+
+**Returns:** Absolute path to the downloaded file or extracted directory
 
 ## Contributing
 
@@ -162,9 +235,37 @@ The project uses GitHub Actions for:
 3. Make your changes
 4. Add tests for new functionality
 5. Ensure all tests pass (`./gradlew test nativeTest`)
-6. Commit your changes (`git commit -m 'Add amazing feature'`)
-7. Push to the branch (`git push origin feature/amazing-feature`)
-8. Open a Pull Request
+6. Update generated constants if needed (`./gradlew generateToolDescriptions`)
+7. Commit your changes (`git commit -m 'Add amazing feature'`)
+8. Push to the branch (`git push origin feature/amazing-feature`)
+9. Open a Pull Request
+
+## Troubleshooting
+
+### Common Issues
+
+**Native executable fails to start:**
+- Ensure you have the correct binary for your platform
+- Check that the binary has execute permissions on Unix systems
+- Verify no antivirus software is blocking execution
+
+**Project generation fails:**
+- Check internet connectivity to Spring Initializr
+- Verify the specified dependencies are valid
+- Ensure the download directory exists and is writable
+
+**MCP connection issues:**
+- Verify the Claude Desktop configuration is correct
+- Check that the binary path is absolute and valid
+- Restart Claude Desktop after configuration changes
+
+### Debug Mode
+
+Run with the dev profile for enhanced logging:
+
+```bash
+./gradlew bootRun --args='--spring.profiles.active=dev'
+```
 
 ## License
 
