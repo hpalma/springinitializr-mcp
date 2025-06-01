@@ -2,6 +2,7 @@ package com.hugopalma.springinitializrmcp;
 
 final class SpringInitializrConstants {
     static final String DOWNLOAD_FOLDER_PATH_DESCRIPTION = "The absolute path of the folder to where the generated project zip file will be downloaded to. Don't provide any value unless the user explicitly mentions it.";
+    static final String SHOULD_EXTRACT_DESCRIPTION = "Whether the downloaded zip file should be extracted. Defaults to 'false'.";
 
     static final String PROJECT_TYPE_DESCRIPTION = "The project type. Defaults to 'gradle-project'. Supported values: 'maven-project', 'gradle-project', 'gradle-project-kotlin'.";
     static final String LANGUAGE_DESCRIPTION = "The language. Defaults to 'java'. Supported values: 'java', 'kotlin', 'groovy'.";

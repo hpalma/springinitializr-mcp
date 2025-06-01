@@ -15,10 +15,12 @@ class SpringInitializrTools {
     // https://github.com/spring-projects/spring-ai/issues/2866
     @Tool(
             name = "generate-spring-boot-project",
-            description = "Generates and downloads a Spring Boot project to a given folder. The return value is the full path of the downloaded file.")
+            description = "Generates and downloads a Spring Boot project to a given folder. The return value is the absolute path of the downloaded file or of the folder where it was extracted to.")
     String generateSpringBootProject(
             @ToolParam(description = DOWNLOAD_FOLDER_PATH_DESCRIPTION, required = false)
             String downloadFolderPath,
+            @ToolParam(description = SHOULD_EXTRACT_DESCRIPTION, required = false)
+            Boolean shouldExtract,
             @ToolParam(description = PROJECT_TYPE_DESCRIPTION, required = false)
             String projectType,
             @ToolParam(description = LANGUAGE_DESCRIPTION, required = false)
@@ -63,6 +65,11 @@ class SpringInitializrTools {
             }
 
             var fullPath = FileAndDownloadUtils.downloadFile(artifactId, downloadUrl, downloadFolderPath);
+
+            if(shouldExtract != null && shouldExtract) {
+                fullPath = FileAndDownloadUtils.extractZip(fullPath);
+            }
+
             return fullPath.toString();
         } catch (Exception e) {
             throw new RuntimeException(String.format("Failed to download the project. Root cause: %s", e.getMessage()), e);
