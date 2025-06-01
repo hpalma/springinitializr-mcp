@@ -134,7 +134,7 @@ class InitializationIntegrationTest {
 
         if (responseJson.has("result")) {
             ArrayNode tools = (ArrayNode) responseJson.get("result").get("tools");
-            assertEquals("generateSpringBootProject", tools.get(0).get("name").asText());
+            assertEquals("generate-spring-boot-project", tools.get(0).get("name").asText());
         } else if (responseJson.has("error")) {
             fail("Initialize failed with error: " + responseJson.get("error"));
         }
