@@ -32,7 +32,7 @@ When generating a project, you can specify:
 
 ### Download Pre-built Binaries
 
-Download the appropriate binary for your platform from the [Releases](https://github.com/yourusername/springinitializr-mcp/releases) page:
+Download the appropriate binary for your platform from the [Releases](hhttps://github.com/hpalma/springinitializr-mcp/releases) page:
 
 - **Linux x64**: `springinitializr-mcp-linux-x64`
 - **Windows x64**: `springinitializr-mcp-windows-x64.exe`
@@ -46,7 +46,7 @@ Requirements:
 - GraalVM (for native compilation)
 
 ```bash
-git clone https://github.com/yourusername/springinitializr-mcp.git
+git clone https://github.com/hpalma/springinitializr-mcp.git
 cd springinitializr-mcp
 ./gradlew build
 ./gradlew nativeCompile
