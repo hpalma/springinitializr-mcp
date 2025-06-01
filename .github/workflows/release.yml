@@ -36,137 +36,98 @@ jobs:
     runs-on: ${{ matrix.os }}
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up GraalVM
-      uses: graalvm/setup-graalvm@v1
-      with:
-        java-version: '24'
-        distribution: 'graalvm-community'
-        
-    - name: Cache Gradle packages
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-          
-    - name: Make gradlew executable (Unix)
-      if: runner.os != 'Windows'
-      run: chmod +x ./gradlew
-      
-    - name: Build JAR
-      run: ./gradlew build -x test
-      
-    - name: Build native image
-      run: ./gradlew nativeCompile
-      
-    - name: Prepare artifact name
-      id: artifact
-      shell: bash
-      run: |
-        if [ "${{ matrix.platform }}" = "macos" ] && [ "${{ matrix.arch }}" = "arm64" ]; then
-          echo "name=springinitializr-mcp-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.executable-suffix }}" >> $GITHUB_OUTPUT
-        else
-          echo "name=springinitializr-mcp-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.executable-suffix }}" >> $GITHUB_OUTPUT
-        fi
-        
-    - name: Copy and rename executable (Unix)
-      if: runner.os != 'Windows'
-      run: |
-        cp build/native/nativeCompile/springinitializr-mcp ${{ steps.artifact.outputs.name }}
-        
-    - name: Copy and rename executable (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        copy build\native\nativeCompile\springinitializr-mcp.exe ${{ steps.artifact.outputs.name }}
-        
-    - name: Upload native executable
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ steps.artifact.outputs.name }}
-        path: ${{ steps.artifact.outputs.name }}
-        
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '24'
+          distribution: 'graalvm-community'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Make gradlew executable (Unix)
+        if: runner.os != 'Windows'
+        run: chmod +x ./gradlew
+
+      - name: Build JAR
+        run: ./gradlew build -x test
+
+      - name: Build native image
+        run: ./gradlew nativeCompile
+
+      - name: Prepare artifact name
+        id: artifact
+        shell: bash
+        run: |
+          if [ "${{ matrix.platform }}" = "macos" ] && [ "${{ matrix.arch }}" = "arm64" ]; then
+            echo "name=springinitializr-mcp-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.executable-suffix }}" >> $GITHUB_OUTPUT
+          else
+            echo "name=springinitializr-mcp-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.executable-suffix }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Copy and rename executable (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cp build/native/nativeCompile/springinitializr-mcp ${{ steps.artifact.outputs.name }}
+
+      - name: Copy and rename executable (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          copy build\native\nativeCompile\springinitializr-mcp.exe ${{ steps.artifact.outputs.name }}
+
+      - name: Upload native executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.name }}
+          path: ${{ steps.artifact.outputs.name }}
+
   release:
     needs: build-native
     runs-on: ubuntu-latest
     if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
-    
+    permissions:
+      contents: write
+      actions: read
+
     steps:
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-      with:
-        path: ./artifacts
-        
-    - name: Display structure of downloaded files
-      run: ls -la ./artifacts/
-      
-    - name: Get release info
-      id: release_info
-      run: |
-        if [ "${{ github.event_name }}" = "release" ]; then
-          echo "tag=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
-          echo "upload_url=${{ github.event.release.upload_url }}" >> $GITHUB_OUTPUT
-        else
-          echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
-        fi
-        
-    - name: Create release (for workflow_dispatch)
-      id: create_release
-      if: github.event_name == 'workflow_dispatch'
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.event.inputs.tag }}
-        release_name: Release ${{ github.event.inputs.tag }}
-        draft: false
-        prerelease: false
-        
-    - name: Set upload URL for workflow_dispatch
-      if: github.event_name == 'workflow_dispatch'
-      run: echo "upload_url=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_OUTPUT
-      
-    - name: Upload Linux x64 binary
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event_name == 'release' && github.event.release.upload_url || steps.create_release.outputs.upload_url }}
-        asset_path: ./artifacts/springinitializr-mcp-linux-x64/springinitializr-mcp-linux-x64
-        asset_name: springinitializr-mcp-linux-x64
-        asset_content_type: application/octet-stream
-        
-    - name: Upload Windows x64 binary
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event_name == 'release' && github.event.release.upload_url || steps.create_release.outputs.upload_url }}
-        asset_path: ./artifacts/springinitializr-mcp-windows-x64.exe/springinitializr-mcp-windows-x64.exe
-        asset_name: springinitializr-mcp-windows-x64.exe
-        asset_content_type: application/octet-stream
-        
-    - name: Upload macOS x64 binary
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event_name == 'release' && github.event.release.upload_url || steps.create_release.outputs.upload_url }}
-        asset_path: ./artifacts/springinitializr-mcp-macos-x64/springinitializr-mcp-macos-x64
-        asset_name: springinitializr-mcp-macos-x64
-        asset_content_type: application/octet-stream
-        
-    - name: Upload macOS ARM64 binary
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event_name == 'release' && github.event.release.upload_url || steps.create_release.outputs.upload_url }}
-        asset_path: ./artifacts/springinitializr-mcp-macos-arm64/springinitializr-mcp-macos-arm64
-        asset_name: springinitializr-mcp-macos-arm64
-        asset_content_type: application/octet-stream
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Display structure of downloaded files
+        run: ls -la ./artifacts/
+
+      - name: Get release tag
+        id: release_info
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "tag=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.release_info.outputs.tag }}
+          name: Release ${{ steps.release_info.outputs.tag }}
+          draft: false
+          prerelease: false
+          files: |
+            ./artifacts/springinitializr-mcp-linux-x64/springinitializr-mcp-linux-x64
+            ./artifacts/springinitializr-mcp-windows-x64.exe/springinitializr-mcp-windows-x64.exe
+            ./artifacts/springinitializr-mcp-macos-x64/springinitializr-mcp-macos-x64
+            ./artifacts/springinitializr-mcp-macos-arm64/springinitializr-mcp-macos-arm64
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
