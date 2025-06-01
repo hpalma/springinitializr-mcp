@@ -9,14 +9,14 @@ import org.springframework.context.annotation.Bean;
 import java.util.List;
 
 @SpringBootApplication
-public class SpringinitializrMcpApplication {
+public class SpringInitializrMcpApplication {
 
     public static void main(String[] args) throws Exception {
-        SpringApplication.run(SpringinitializrMcpApplication.class, args);
+        SpringApplication.run(SpringInitializrMcpApplication.class, args);
     }
 
     @Bean
-    List<ToolCallback> toolsProvider(SpringInitialzrTools springInitialzrTools) {
-        return List.of(ToolCallbacks.from(springInitialzrTools));
+    List<ToolCallback> toolsProvider(SpringInitializrTools springInitializrTools) {
+        return List.of(ToolCallbacks.from(springInitializrTools));
     }
 }

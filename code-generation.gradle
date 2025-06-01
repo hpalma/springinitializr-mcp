@@ -4,8 +4,8 @@ tasks.register('generateToolDescriptions') {
     doLast {
         def metadata = fetchSpringInitializrMetadata()
 
-        def templateFile = file('src/templates/SpringInitialzrConstants.java')
-        def outputFile = file('src/generated/java/com/hugopalma/springinitializrmcp/SpringInitialzrConstants.java')
+        def templateFile = file('src/templates/SpringInitializrConstants.java')
+        def outputFile = file('src/generated/java/com/hugopalma/springinitializrmcp/SpringInitializrConstants.java')
 
         outputFile.parentFile.mkdirs()
 

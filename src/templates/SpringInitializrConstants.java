@@ -1,6 +1,6 @@
 package com.hugopalma.springinitializrmcp;
 
-final class SpringInitialzrConstants {
+final class SpringInitializrConstants {
     static final String DOWNLOAD_FOLDER_PATH_DESCRIPTION = "The absolute path of the folder to where the generated project zip file will be downloaded to. Don't provide any value unless the user explicitly mentions it.";
 
     static final String PROJECT_TYPE_DESCRIPTION = "The project type. Defaults to 'gradle-project'. Supported values: 'maven-project', 'gradle-project', 'gradle-project-kotlin'.";

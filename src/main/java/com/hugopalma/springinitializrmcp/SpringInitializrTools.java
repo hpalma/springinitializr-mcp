@@ -6,10 +6,10 @@ import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
 
-import static com.hugopalma.springinitializrmcp.SpringInitialzrConstants.*;
+import static com.hugopalma.springinitializrmcp.SpringInitializrConstants.*;
 
 @Service
-class SpringInitialzrTools {
+class SpringInitializrTools {
 
     // Unfortunately Spring AI doesn't seem to support @ToolParam in nested classes yet.
     // https://github.com/spring-projects/spring-ai/issues/2866
